@@ -12,3 +12,8 @@ class ReviewResponse(CamelModel):
     customer_name: str
     point: int
     content: str
+
+class ReplyResponse(CamelModel):
+    review_id: int
+    reply: str
+    
