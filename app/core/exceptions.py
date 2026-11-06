@@ -19,3 +19,11 @@ async def review_not_found_handler(request: Request, exc: ReviewNotFoundError):
         status_code=404,
         content={"message": f"리뷰를 찾을 수 없습니다. (id={exc.review_id})"},
     )
+
+
+
+async def ai_request_error_handler(request: Request, exc: AiRequestError):
+    return JSONResponse(
+        status_code=502,
+        content={"message": exc.message},
+    )
