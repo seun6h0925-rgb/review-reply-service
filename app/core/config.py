@@ -37,8 +37,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 # 2. 설정 클래스 생성
 class Settings(BaseSettings):
-
-     # DTO의 model_config와 동일하게, 클래스 변수 model_config에 설정을 적는다.
+    # DTO의 model_config와 동일하게, 클래스 변수 model_config에 설정을 적는다.
     model_config = SettingsConfigDict(
         # .env 파일의 위치와 인코딩
         env_file=PROJECT_ROOT / ".env",
@@ -54,12 +53,14 @@ class Settings(BaseSettings):
     # 그때는 가짜 LLM 클라이언트를 사용한다.
     openai_api_key: SecretStr | None = None
 
-     # 사용할 모델
+    # 사용할 모델
     openai_model: str = "gpt-6-luna"
 
     # 추론 정도 : 사용 가능한 값들을 Literal로 정해 두면 .env에 오타(nnone 등)를 적었을 때 서버가 시작하면서 알려 준다.
     # none은 추론 없이 바로 응답한다. 질문에 답하는 정도의 일에는 충분하고 응답도 빠르다.
-    openai_reasoning_effort: Literal["none", "minimal", "low", "medium", "high", "xhigh"] = "none"
+    openai_reasoning_effort: Literal[
+        "none", "minimal", "low", "medium", "high", "xhigh"
+    ] = "none"
 
     # 출력 토큰 상한 : 상한을 넘으면 응답이 중간에 끊긴다. 0보다 커야 한다.
     openai_max_output_tokens: int = Field(default=300, gt=0)
@@ -78,8 +79,8 @@ class Settings(BaseSettings):
     thread_pool_size: int | None = Field(default=None, ge=1)
 
 
-
 # 3. 설정 객체 반환함수 정의 (feat. @lru_cache)
+
 
 # FastAPI 프로젝트에서 functools(파이썬 표준 라이브러리)의 @lru_cache 데코레이터는 주로 환경 설정(.env)이나
 # 무거운 객체(DB 연결 클라이언트, ML 모델 등)를 요청마다 새로 로드하지 않고,
@@ -89,6 +90,7 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
+
 
 # 확인 : 프로젝트 폴더의 터미널에서 아래를 실행하면 읽어 들인 설정이 찍힌다. 키는 별표로 가려진다.
 #   uv run python -c "from app.core.config import get_settings; print(get_settings())"
