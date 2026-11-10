@@ -7,7 +7,9 @@ class ReviewRepository:
         self._next_id = 1
 
     def save(self, customer_name: str, point: int, content: str) -> Review:
-        review = Review(id=self._next_id, customer_name=customer_name, point=point, content=content)
+        review = Review(
+            id=self._next_id, customer_name=customer_name, point=point, content=content
+        )
         self._reviews[review.id] = review
         self._next_id += 1
         return review

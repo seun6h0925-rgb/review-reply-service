@@ -8,8 +8,8 @@ from app.core.exceptions import AiRequestError
 
 # 1. OpenAI를 왔다 갔다 하는 클라이언트 클래스 정의
 
-class OpenAILlmClient:
 
+class OpenAILlmClient:
     # 0) 생성자
     def __init__(self, settings: Settings):
         self.settings = settings
@@ -19,10 +19,10 @@ class OpenAILlmClient:
         # 만약 키가 없다면 FastAPI의 lifespan이 이 클래스 대신 FakeLlmClient를 만든다.
         # 그래도 lifespan을 거치지 않고 이 클래스를 직접 만드는 경우(테스트 등)에는 여기서 원인을 알려 주며 멈춘다.
 
-
         if settings.openai_api_key is None:
-            raise ValueError("Open AI Key가 없어서 OpenAI 클라이언트를 만들 수 없습니다.")
-
+            raise ValueError(
+                "Open AI Key가 없어서 OpenAI 클라이언트를 만들 수 없습니다."
+            )
 
         # api key 값 준비: secretStr이라서 아래걸로 뽑아야함
         api_key = settings.openai_api_key.get_secret_value()
@@ -35,18 +35,13 @@ class OpenAILlmClient:
 
         # 동기 요청 처리용 클라이언트 객체 생성
         self.client = openai.OpenAI(
-            api_key=api_key,
-            timeout=settings.openai_timeout_seconds,
-            max_retries=1
+            api_key=api_key, timeout=settings.openai_timeout_seconds, max_retries=1
         )
 
         # 비동기 요청 처리용 클라이언트 객체 생성
         self._async_client = openai.AsyncOpenAI(
-            api_key=api_key,
-            timeout=settings.openai_timeout_seconds,
-            max_retries=1
+            api_key=api_key, timeout=settings.openai_timeout_seconds, max_retries=1
         )
-
 
     # 1) 동기 질문
     # 응답이 올 때까지 해당 라인에서 스레드가 머춰있게 된다.
@@ -61,16 +56,11 @@ class OpenAILlmClient:
             # OpenAI Responses API 호출 (POST http://api.openai.com/v1/responses)
             response = self.client.responses.create(
                 model=self.settings.openai_model,
-
                 instructions=instructions,
-
                 input=questions,
-
                 max_output_tokens=self.settings.openai_max_output_tokens,
-
                 reasoning={"effort": self.settings.openai_reasoning_effort},
-
-                store=False
+                store=False,
             )
 
         except openai.OpenAIError as e:
@@ -79,7 +69,6 @@ class OpenAILlmClient:
         print_usage("ask_ansync", response, start)
 
         return response.output_text
-
 
     # 2) 비동기 질문
     async def ask_async(self, instructions: str, questions: str) -> str:
@@ -92,16 +81,11 @@ class OpenAILlmClient:
             # OpenAI Responses API 호출 (POST http://api.openai.com/v1/responses)
             response = await self._async_client.responses.create(
                 model=self.settings.openai_model,
-
                 instructions=instructions,
-
                 input=questions,
-
                 max_output_tokens=self.settings.openai_max_output_tokens,
-
                 reasoning={"effort": self.settings.openai_reasoning_effort},
-
-                store=False
+                store=False,
             )
 
         except openai.OpenAIError as e:
@@ -111,13 +95,13 @@ class OpenAILlmClient:
 
         return response.output_text
 
-
     # 3) 정리 함수
     async def close(self):
         pass
 
 
 # 2. 사용량 출력 함수
+
 
 def print_usage(method: str, response, start: float) -> None:
     """걸린 시간과 토큰 사용량을 콘솔에 찍는다. 비용을 확인할 때 사용한다."""
@@ -135,11 +119,14 @@ def print_usage(method: str, response, start: float) -> None:
     # - input_tokens_details.cached_tokens: 입력 중 캐시에서 재사용한 토큰 수
     # - output_tokens_details.reasoning_tokens: 출력 중 추론에 사용한 토큰 수
     if usage is not None:
-        print(f"[OpenAiLlmClient.{method}] model={response.model}, "
-              f"입력 토큰={usage.input_tokens}, 출력 토큰={usage.output_tokens}, {elapsed_ms}ms")
+        print(
+            f"[OpenAiLlmClient.{method}] model={response.model}, "
+            f"입력 토큰={usage.input_tokens}, 출력 토큰={usage.output_tokens}, {elapsed_ms}ms"
+        )
 
 
 # 3. OpenAI 예외 변수 함수
+
 
 def to_ai_request_error(e: openai.OpenAIError) -> AiRequestError:
     """
@@ -154,7 +141,9 @@ def to_ai_request_error(e: openai.OpenAIError) -> AiRequestError:
 
     # AuthenticationError: OpenAI 서버의 401 응답. API 키가 틀렸거나, 삭제되었거나, 빈 문자열이다.
     if isinstance(e, openai.AuthenticationError):
-        return AiRequestError("OpenAI API 키가 올바르지 않습니다. OPENAI_API_KEY를 확인하세요.")
+        return AiRequestError(
+            "OpenAI API 키가 올바르지 않습니다. OPENAI_API_KEY를 확인하세요."
+        )
 
     # RateLimitError: OpenAI 서버의 429 응답. 짧은 시간에 요청을 너무 많이 보냈거나, 계정의 충전 잔액이 바닥났다.
     if isinstance(e, openai.RateLimitError):
@@ -173,6 +162,7 @@ def to_ai_request_error(e: openai.OpenAIError) -> AiRequestError:
     # 그 밖의 오류: 400(요청 형식 오류, 없는 모델 이름 등), 403(권한 없음), 500번대(OpenAI 서버 오류) 등.
     # 메시지에 원래 예외의 내용을 함께 담는다.
     return AiRequestError(f"OpenAI 호출 실패 : {e}")
+
 
 # [실행해보기]
 class FakeLlmClient:
