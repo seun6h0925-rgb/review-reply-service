@@ -12,3 +12,8 @@ dependencies = [
 ]
 [tool.fastapi]
 entrypoint = "app.main:app"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.17.4",
+]
